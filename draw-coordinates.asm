@@ -1,164 +1,116 @@
-; this sample prints 16x16 color map,
-; it uses all possible colors.
 
-draw_row macro
-next_row:
-    inc     dh
-    cmp     dh, 13
-    je      get_col
-    mov     dl, 0
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+clear_screen macro
     
-    next_char:
+    mov ax,00
+    mov cx,0000h
+    mov dx,184fh
+    int 10h
+
+endm
     
-    ; set cursor position at (dl,dh):
-    mov     ah, 02h
-    int     10h
     
-    mov     al, '.'
-    mov     bh, 0
-    mov     cx, 1
-    mov     ah, 09h
-    int     10h
+set_video macro  
+    mov ah, 0   ; set display mode function.
+    mov al, 13h ; mode 13h = 320x200 pixels, 256 colors.
+    int 10h
+endm
+
+draw_coordinates macro
+    set_video  
+    mov cx, 0  ; column
+    mov dx, 100  ; row
     
-    ;inc     bl      ; next attributes.
+    x_coordinate:
+    mov al, 15  ; white
+    mov ah, 0ch ; put pixel
+    int 10h
     
-    inc     dl
-    cmp     dl, 40
-    je      next_row
-    jmp     next_char   
+    inc cx
+    cmp cx,320
+    jl x_coordinate
+    
+    
+    
+    mov cx, 160  ; column
+    mov dx, 0  ; row
+    
+    
+    y_coordinate:
+    
+    mov al, 15  ; white
+    mov ah, 0ch ; put pixel
+    int 10h
+    
+    inc dx
+    cmp dx,200
+    jl y_coordinate  
 endm
 
 
-draw_column macro
-    get_col:
-    mov     dl, 20
-    mov     dh, 0   ; current row.
-    jmp next_char2  
-    
-    next_col:
-    ;inc     dh
-    cmp     dh, 25
-    je      stop_print
-    
-    
-    next_char2:   
-    
-    
-    
-    
-    ; set cursor position at (dl,dh):
-    mov     ah, 02h
-    int     10h
-    
-    mov     al, '.'
-    mov     bh, 0
-    mov     cx, 1
-    mov     ah, 09h
-    int     10h
-    
-    ;inc     bl      ; next attributes.
-    
-    inc     dh
-    cmp     dh, 25
-    je      next_col
-    jmp     next_char2
-endm
-       
-
-
-
-org     100h   
+org 100h
 
 jmp start
+msg1  db 0Dh,0Ah, 'enter first number(a): $'
 
-;-------------------------s---------------------------       
-msg1  db 0Dh,0Ah, 'enter first number: $'
+msg2  db 0Dh,0Ah, 'enter second number(b): $'   
 
-msg2  db 0Dh,0Ah, 'enter second number: $'       
-       
 
-;----------------------------------------------------
- 
-a dw ?
-b dw ?
-
-;----------------------------------------------------
+var_a db ?
+var_b db ?
 
 start:
 
-lea dx, msg1
-mov ah, 09h     ; output string at ds:dx
-int 21h  
+set_video
 
-mov ah,01h  ; dos function to read a character with echo from keyboard
-                ; result (character entered) is stored in al
-int 21h     ; dos interrupt 21h 
- 
+CALL getParameter
 
-add al,48
-mov dl,al
-mov ah, 02h     ; output string at ds:dx
-int 21h
+clear_screen
+
+
+draw_coordinates
+
+clear_screen
 
 
 
-;---------------------------------------------------- 
-
-; set video mode:
-; text mode. 40x25. 16 colors. 8 pages.
-mov     ax, 1
-int     10h
-
-; blinking disabled for compatibility with dos,
-; emulator and windows prompt do not blink anyway.
-mov     ax, 1003h
-mov     bx, 0      ; disable blinking.
-int     10h
-
-
-               
-mov     dl, 0   ; current column.
-mov     dh, 12   ; current row.
-
-mov     bl, 3   ; current attributes.
-
- 
+;------------------------ 
 
 
 
-jmp     next_char  
-
-;----------------------------------------------------
-
-
-draw_row   
-
-;----------------------------------------------------
-
-draw_column      
-
-;----------------------------------------------------
-stop_print:
 
 
 
-; set cursor position at (dl,dh):
-mov     dl, 10  ; column.
-mov     dh, 5   ; row.
-mov     ah, 02h
-int     10h
-
-; test of teletype output,
-; it uses color attributes
-; at current cursor position:
-mov     al, 'x'
-mov     ah, 0eh
-int     10h
-
-
-; wait for any key press:
-mov ah, 0
-int 16h
 
 
 ret
+
+getParameter  PROC
+
+    lea dx, msg1
+    mov ah, 09h     ; output string at ds:dx
+    int 21h  
+    
+    mov ah,01h      ; dos function to read a character with echo from keyboard
+                    ; result (character entered) is stored in al
+    int 21h
+    mov var_a,al
+    
+    lea dx, msg2
+    mov ah, 09h     ; output string at ds:dx
+    int 21h  
+    
+    mov ah,01h      ; dos function to read a character with echo from keyboard
+                    ; result (character entered) is stored in al
+    int 21h
+    mov var_b,al
+     
+    ret              ; return to caller.
+getParameter  ENDP
+
+
+end
+
+
