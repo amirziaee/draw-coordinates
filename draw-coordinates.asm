@@ -1,7 +1,3 @@
-
-; You may customize this and other start-up templates; 
-; The location of this template is c:\emu8086\inc\0_com_template.txt
-
 clear_screen macro
     
     mov ax,00
@@ -95,8 +91,9 @@ msg4  db 0Dh,0Ah, 'please press space comput a and b again... $'
 var_a dw ?
 var_b dw ?
 final_column dw ?
-final_row dw ?
+final_row dw ?        
 
+;--------------------------------------------------------
 
 start:
 
@@ -115,39 +112,27 @@ draw_coordinates
 draw_points: 
 
 
-    
-    mov cx,final_column  ; column 
-    mov dx, final_row  ; row
-    mov al, 13  ; aaaawhite
-    mov ah, 0ch ; put pixel
-    int 10h
  
     mov cx, 160  ; column
     mov dx, 100  ; row
-    mov al, 14  ; aaaawhite
+    mov al, 14  ; a color
     mov ah, 0ch ; put pixel
     int 10h
     
     
-    draw_line:
+draw_line:
     inc cx
-    inc dx
-    mov al, 14  ; aaaawhite
+    dec dx
+    mov al, 14  ; a color
     mov ah, 0ch ; put pixel
     int 10h
     cmp cx,final_column
     jle draw_line
-    dx_continue:
-    inc dx
-    mov al, 14  ; aaaawhite
-    mov ah, 0ch ; put pixel
-    int 10h
-    cmp dx,final_row
-    jl dx_continue
 
 
+CALL delay
 
-;clear_screen
+clear_screen
 
 
 
@@ -155,19 +140,19 @@ draw_points:
 
 check_status: 
 
-;dieOrLive
+dieOrLive
 
 
-;exit:
-;mov ah,4ch
-;int 21h
+exit:
+mov ah,4ch
+int 21h
 
-
+ret  
 
 ;-------------------------------------------------------- 
 
 
-ret   
+ 
 
 
 
@@ -205,12 +190,28 @@ setParameter PROC
     add var_b,ax
     push var_b
     add ax,160       ;comput current position in coordinate
+
+
     mov final_column,ax  ;set x
     pop ax
-    add ax,100       ;comput current position in coordinate
+    mov dx,100
+    sub dx,ax
+    mov ax,dx       ;comput current position in coordinate
+    and dx,00
     mov final_row,ax  ;set y
     ret
-setParameter ENDP    
+setParameter ENDP
+
+
+delay PROC  
+     
+      mov cx, 7      ;high word.
+      mov dx, 0fffh ;low word.
+      mov ah, 86h    ;wait.
+      int 15h
+      ret
+      
+delay ENDP 
     
 
 
@@ -223,10 +224,21 @@ end
 ;    mov ah, 0ch ; put pixel
 ;    int 10h
 ;
+;    
+;    dx_continue:
+;   dec dx
+;    mov al, 14  ; a color
+;    mov ah, 0ch ; put pixel
+;    int 10h
+;    cmp dx,final_row
+;    jne dx_continue
 ;
 ;
-;
-;
+;    mov cx,final_column  ; column     first point
+;    mov dx, final_row  ; row    first point
+;    mov al, 13  ; a color
+;    mov ah, 0ch ; put pixel
+;    int 10h
 ;
 ;
 ;
